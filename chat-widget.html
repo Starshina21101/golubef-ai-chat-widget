@@ -1,0 +1,59 @@
+<!-- Контейнер для всего виджета -->
+<div id="golubef-ai-chat-container">
+    <!-- Начальное состояние (встроенное поле ввода, как на uipath.com) -->
+    <div id="chat-initial-state">
+        <div id="chat-input-container">
+            <input type="text" id="initial-chat-input" placeholder="Спросите что-нибудь у Golubef AI...">
+            <button id="initial-chat-send-button" aria-label="Отправить">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+        <div id="initial-quick-replies">
+            <span>Не знаете, с чего начать? Попробуйте:</span>
+            <button class="quick-reply-chip">Расскажи о кейсах</button>
+            <button class="quick-reply-chip">Какие у вас цены?</button>
+            <button class="quick-reply-chip">Позови менеджера</button>
+        </div>
+    </div>
+
+    <!-- Развернутое состояние (окно чата) -->
+    <div id="chat-window" class="hidden">
+        <!-- Заголовок чата -->
+        <div id="chat-header">
+            <span id="chat-title">Golubef AI</span>
+            <button id="chat-close-button" aria-label="Закрыть чат">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Контейнер для сообщений -->
+        <div id="chat-messages">
+            <!-- Здесь будут динамически добавляться сообщения -->
+            <div class="message system">
+                <p>Здравствуйте! Я — GolubefAI, ваш персональный AI-эксперт по автоматизации. Чем могу помочь?</p>
+            </div>
+        </div>
+
+        <!-- Поле ввода сообщения -->
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Задайте вопрос или напишите 'позови менеджера'">
+            <button id="chat-send-button" aria-label="Отправить сообщение">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Кнопки быстрых ответов (опционально) -->
+        <div id="chat-quick-replies">
+            <!-- Здесь будут динамически добавляться быстрые ответы -->
+        </div>
+    </div>
+</div>
