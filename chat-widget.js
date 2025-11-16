@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatSendButton = document.getElementById('chat-send-button');
     const chatQuickReplies = document.getElementById('chat-quick-replies');
 
-    let messageCounter = 0; // Счетчик сообщений для ограничения
-    const MESSAGE_LIMIT = 15; // Лимит сообщений на сессию
+    let messageCounter = 0;
+    const MESSAGE_LIMIT = 15;
 
     // Функция для добавления сообщения в чат
     function addMessage(text, sender = 'assistant') {
@@ -24,13 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
         p.textContent = text;
         messageDiv.appendChild(p);
         chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Прокрутка вниз
+        chatMessages.scrollTop = chatMessages.scrollHeight;
         return messageDiv;
     }
 
-    // Функция для очистки и добавления быстрых ответов
+    // Функция для быстрых ответов
     function updateQuickReplies(replies = []) {
-        chatQuickReplies.innerHTML = ''; // Очищаем старые
+        chatQuickReplies.innerHTML = '';
         replies.forEach(reply => {
             const button = document.createElement('button');
             button.classList.add('quick-reply-button');
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Функция для открытия и инициализации чата
+    // Открытие чата
     function openChat() {
         initialState.style.display = 'none';
         chatWindow.classList.remove('hidden');
@@ -50,14 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Обработчик кнопки закрытия
+    // Закрытие чата
     chatCloseButton.addEventListener('click', () => {
         chatWindow.classList.add('hidden');
         initialState.style.display = 'block';
         messageCounter = 0;
     });
 
-    // Функция отправки сообщения на n8n
+    // Отправка сообщения в n8n
     async function sendMessageToN8n(userMessage) {
         const n8nBackendUrl = 'https://auto.golubef.store/webhook/golubef-ai';
         const authToken = window.GOLUBEF_AI_N8N_TOKEN;
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Обработчик отправки сообщения
+    // Основной обработчик отправки сообщений
     async function handleSendMessage(messageText, isQuickReply = false) {
         if (!messageText.trim()) return;
 
@@ -140,12 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     updateQuickReplies();
                 }
-
-                if (n8nResponse.action === 'human_handoff') {
-                    // Логика для human_handoff
-                } else if (n8nResponse.action === 'lead_capture') {
-                    // Логика для lead_capture
-                }
             }
         } catch (error) {
             if (typingIndicator) {
@@ -160,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Обработчики для начального состояния
+    // Слушатели событий
     initialChatSendButton.addEventListener('click', () => {
         handleSendMessage(initialChatInput.value);
     });
@@ -177,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Обработчики для окна чата
     chatSendButton.addEventListener('click', () => {
         handleSendMessage(chatInput.value);
     });
