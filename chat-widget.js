@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatSendButton = document.getElementById('chat-send-button');
     const chatQuickReplies = document.getElementById('chat-quick-replies');
 
+    // --- ПРОВЕРКА НАЛИЧИЯ ЭЛЕМЕНТОВ ---
+    if (!initialState || !chatWindow || !chatOverlay) {
+        console.error('Ошибка: один или несколько ключевых элементов чата не найдены на странице.');
+        return;
+    }
+
     let messageCounter = 0;
     const MESSAGE_LIMIT = 15;
 
@@ -20,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveChatHistory() {
         const messages = [];
         chatMessages.querySelectorAll('.message').forEach(msgDiv => {
-            if (!msgDiv.classList.contains('typing')) { // Не сохраняем индикатор печати
+            if (!msgDiv.classList.contains('typing')) {
                 messages.push({
                     text: msgDiv.querySelector('p').textContent,
                     sender: msgDiv.classList.contains('user') ? 'user' : (msgDiv.classList.contains('system') ? 'system' : 'assistant')
@@ -85,8 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeChat() {
         chatWindow.classList.remove('visible');
         chatOverlay.classList.remove('visible');
-        // Не показываем initialState, если чат был открыт
-        // initialState.style.display = 'block'; 
         messageCounter = 0;
     }
 
@@ -174,11 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- СЛУШАТЕЛИ СОБЫТИЙ ---
 
-    chatCloseButton.addEventListener('click', closeChat);
-    chatOverlay.addEventListener('click', closeChat);
+    if(chatCloseButton) chatCloseButton.addEventListener('click', closeChat);
+    if(chatOverlay) chatOverlay.addEventListener('click', closeChat);
 
-    initialChatSendButton.addEventListener('click', () => handleSendMessage(initialChatInput.value));
-    initialChatInput.addEventListener('keypress', (e) => {
+    if(initialChatSendButton) initialChatSendButton.addEventListener('click', () => handleSendMessage(initialChatInput.value));
+    if(initialChatInput) initialChatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSendMessage(initialChatInput.value);
     });
 
@@ -186,8 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => handleSendMessage(button.textContent, true));
     });
 
-    chatSendButton.addEventListener('click', () => handleSendMessage(chatInput.value));
-    chatInput.addEventListener('keypress', (e) => {
+    if(chatSendButton) chatSendButton.addEventListener('click', () => handleSendMessage(chatInput.value));
+    if(chatInput) chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSendMessage(chatInput.value);
     });
 
