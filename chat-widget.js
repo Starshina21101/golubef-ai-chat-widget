@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatQuickReplies = document.getElementById('chat-quick-replies');
 
     // --- ПРОВЕРКА НАЛИЧИЯ ЭЛЕМЕНТОВ ---
-    if (!initialState || !chatWindow || !chatOverlay) {
+    if (!initialState || !chatWindow || !chatOverlay || !chatMessages) {
         console.error('Ошибка: один или несколько ключевых элементов чата не найдены на странице.');
         return;
     }
@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateQuickReplies(replies = []) {
+        if (!chatQuickReplies) return;
         chatQuickReplies.innerHTML = '';
         replies.forEach(reply => {
             const button = document.createElement('button');
@@ -85,13 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
         initialState.style.display = 'none';
         chatOverlay.classList.add('visible');
         chatWindow.classList.add('visible');
-        chatInput.focus();
+        if(chatInput) chatInput.focus();
     }
 
     function closeChat() {
         chatWindow.classList.remove('visible');
         chatOverlay.classList.remove('visible');
+        initialState.style.display = 'block';
         messageCounter = 0;
+        localStorage.removeItem('chatIsOpen');
     }
 
     // --- ВЗАИМОДЕЙСТВИЕ С N8N ---
@@ -144,12 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addMessage(messageText, 'user');
         messageCounter++;
-        chatInput.value = '';
-        initialChatInput.value = '';
+        if(chatInput) chatInput.value = '';
+        if(initialChatInput) initialChatInput.value = '';
 
         const typingIndicator = addMessage('AI печатает', 'system');
-        chatInput.disabled = true;
-        chatSendButton.disabled = true;
+        if(chatInput) chatInput.disabled = true;
+        if(chatSendButton) chatSendButton.disabled = true;
 
         try {
             const n8nResponse = await sendMessageToN8n(messageText);
@@ -170,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Ошибка в JS-логике виджета:", error);
             addMessage('Извините, произошла непредвиденная ошибка.', 'system error');
         } finally {
-            chatInput.disabled = false;
-            chatSendButton.disabled = false;
-            chatInput.focus();
+            if(chatInput) chatInput.disabled = false;
+            if(chatSendButton) chatSendButton.disabled = false;
+            if(chatInput) chatInput.focus();
         }
     }
 
