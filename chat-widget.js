@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(p);
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight; // Прокрутка вниз
+        return messageDiv;
     }
 
     // Функция для очистки и добавления быстрых ответов
@@ -35,8 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             button.classList.add('quick-reply-button');
             button.textContent = reply.title;
             button.onclick = () => {
-                // Отправляем payload как сообщение
-                handleSendMessage(reply.payload, true); // true означает, что это быстрый ответ
+                handleSendMessage(reply.payload, true);
             };
             chatQuickReplies.appendChild(button);
         });
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Функция для открытия и инициализации чата
     function openChat() {
-        initialState.style.display = 'none'; // Скрываем начальное состояние
+        initialState.style.display = 'none';
         chatWindow.classList.remove('hidden');
         chatInput.focus();
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -53,24 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработчик кнопки закрытия
     chatCloseButton.addEventListener('click', () => {
         chatWindow.classList.add('hidden');
-        initialState.style.display = 'block'; // Показываем начальное состояние снова
-        messageCounter = 0; // Сбрасываем счетчик при закрытии
+        initialState.style.display = 'block';
+        messageCounter = 0;
     });
 
     // Функция отправки сообщения на n8n
     async function sendMessageToN8n(userMessage) {
         const n8nBackendUrl = 'https://auto.golubef.store/webhook/golubef-ai';
-        const authToken = window.GOLUBEF_AI_N8N_TOKEN; // Получаем токен из глобальной переменной
+        const authToken = window.GOLUBEF_AI_N8N_TOKEN;
 
         let sessionId = localStorage.getItem('chatSessionId');
         if (!sessionId) {
-            sessionId = crypto.randomUUID(); // Генерируем уникальный ID сессии
+            sessionId = crypto.randomUUID();
             localStorage.setItem('chatSessionId', sessionId);
         }
 
         let userId = localStorage.getItem('chatUserId');
         if (!userId) {
-            userId = `guest_${crypto.randomUUID()}`; // Генерируем уникальный ID гостя
+            userId = `guest_${crypto.randomUUID()}`;
             localStorage.setItem('chatUserId', userId);
         }
 
@@ -93,12 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const data = await response.json();
-            return data; // Возвращаем JSON-объект с action, response, quick_replies
+            
+            return await response.json();
         } catch (error) {
             console.error('Ошибка при отправке сообщения в n8n:', error);
-            // Возвращаем объект ошибки для фронтенда
             return { action: 'error', response: 'Извините, произошла ошибка. Попробуйте позже.' };
         }
     }
@@ -107,33 +105,31 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleSendMessage(messageText, isQuickReply = false) {
         if (!messageText.trim()) return;
 
-        // Если это первое сообщение, открываем чат
         if (chatWindow.classList.contains('hidden')) {
             openChat();
         }
 
-        // Проверяем лимит сообщений
         if (messageCounter >= MESSAGE_LIMIT) {
             addMessage('Кажется, у вас сложный вопрос. Давайте я позову эксперта, он скоро с вами свяжется.', 'system');
             return;
         }
 
         addMessage(messageText, 'user');
-        messageCounter++; // Увеличиваем счетчик после сообщения пользователя
+        messageCounter++;
         chatInput.value = '';
         initialChatInput.value = '';
 
-        // Показываем индикатор печати AI и блокируем ввод
         const typingIndicator = addMessage('AI печатает...', 'system');
         chatInput.disabled = true;
         chatSendButton.disabled = true;
-        updateQuickReplies(); // Скрываем быстрые ответы после отправки
+        updateQuickReplies();
 
         try {
             const n8nResponse = await sendMessageToN8n(messageText);
 
-            // Удаляем индикатор печати
-            typingIndicator.remove();
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
 
             if (n8nResponse.action === 'error') {
                 addMessage(n8nResponse.response, 'system error');
@@ -142,17 +138,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (n8nResponse.quick_replies && n8nResponse.quick_replies.length > 0) {
                     updateQuickReplies(n8nResponse.quick_replies);
                 } else {
-                    updateQuickReplies(); // Очистить, если нет новых
+                    updateQuickReplies();
                 }
 
                 if (n8nResponse.action === 'human_handoff') {
-                    // Возможно, показать дополнительное UI
+                    // Логика для human_handoff
                 } else if (n8nResponse.action === 'lead_capture') {
-                    // Возможно, показать форму лидогенерации
+                    // Логика для lead_capture
                 }
             }
         } catch (error) {
-            typingIndicator.remove();
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
             console.error("Ошибка в JS-логике виджета:", error);
             addMessage('Извините, произошла непредвиденная ошибка.', 'system error');
         } finally {
@@ -162,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Обработчики для нового начального состояния
+    // Обработчики для начального состояния
     initialChatSendButton.addEventListener('click', () => {
         handleSendMessage(initialChatInput.value);
     });
