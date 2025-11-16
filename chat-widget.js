@@ -59,7 +59,7 @@ chatCloseButton.addEventListener('click', () => {
 
 // Функция отправки сообщения на n8n
 async function sendMessageToN8n(userMessage) {
-    const n8nBackendUrl = 'https://auto.golubef.store/webhook/golubef-ai';
+    const n8nBackendUrl = 'https://auto.golubef.store/webhook/chat/golubef-ai';
     const authToken = window.GOLUBEF_AI_N8N_TOKEN; // Получаем токен из глобальной переменной
 
     let sessionId = localStorage.getItem('chatSessionId');
@@ -68,9 +68,15 @@ async function sendMessageToN8n(userMessage) {
         localStorage.setItem('chatSessionId', sessionId);
     }
 
+    let userId = localStorage.getItem('chatUserId');
+    if (!userId) {
+        userId = `guest_${crypto.randomUUID()}`; // Генерируем уникальный ID гостя
+        localStorage.setItem('chatUserId', userId);
+    }
+
     const payload = {
         sessionId: sessionId,
-        // userId: 'user_id_if_logged_in', // Опционально
+        userId: userId,
         message: userMessage
     };
 
