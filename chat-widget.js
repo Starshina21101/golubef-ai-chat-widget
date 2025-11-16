@@ -1,11 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Глобальные переменные
-    const chatContainer = document.getElementById('golubef-ai-chat-container');
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
     const initialState = document.getElementById('chat-initial-state');
     const initialChatInput = document.getElementById('initial-chat-input');
     const initialChatSendButton = document.getElementById('initial-chat-send-button');
-    const initialQuickReplies = document.getElementById('initial-quick-replies');
-
+    
     const chatWindow = document.getElementById('chat-window');
     const chatCloseButton = document.getElementById('chat-close-button');
     const chatMessages = document.getElementById('chat-messages');
@@ -16,8 +14,34 @@ document.addEventListener('DOMContentLoaded', () => {
     let messageCounter = 0;
     const MESSAGE_LIMIT = 15;
 
-    // Функция для добавления сообщения в чат
-    function addMessage(text, sender = 'assistant') {
+    // --- ЛОГИКА СОХРАНЕНИЯ ИСТОРИИ ---
+
+    function saveChatHistory() {
+        const messages = [];
+        chatMessages.querySelectorAll('.message').forEach(msgDiv => {
+            messages.push({
+                text: msgDiv.querySelector('p').textContent,
+                sender: msgDiv.classList.contains('user') ? 'user' : (msgDiv.classList.contains('system') ? 'system' : 'assistant')
+            });
+        });
+        localStorage.setItem('chatHistory', JSON.stringify(messages));
+        localStorage.setItem('chatIsOpen', 'true');
+    }
+
+    function loadChatHistory() {
+        const history = JSON.parse(localStorage.getItem('chatHistory'));
+        const isOpen = localStorage.getItem('chatIsOpen') === 'true';
+
+        if (isOpen && history && history.length > 0) {
+            chatMessages.innerHTML = ''; // Очищаем приветственное сообщение
+            history.forEach(msg => addMessage(msg.text, msg.sender, false));
+            openChat();
+        }
+    }
+
+    // --- ОСНОВНЫЕ ФУНКЦИИ ЧАТА ---
+
+    function addMessage(text, sender = 'assistant', save = true) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', sender);
         const p = document.createElement('p');
@@ -25,39 +49,42 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(p);
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (save) {
+            saveChatHistory();
+        }
         return messageDiv;
     }
 
-    // Функция для быстрых ответов
     function updateQuickReplies(replies = []) {
         chatQuickReplies.innerHTML = '';
         replies.forEach(reply => {
             const button = document.createElement('button');
             button.classList.add('quick-reply-button');
             button.textContent = reply.title;
-            button.onclick = () => {
-                handleSendMessage(reply.payload, true);
-            };
+            button.onclick = () => handleSendMessage(reply.payload, true);
             chatQuickReplies.appendChild(button);
         });
     }
 
-    // Открытие чата
     function openChat() {
         initialState.style.display = 'none';
         chatWindow.classList.remove('hidden');
         chatInput.focus();
-        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Закрытие чата
-    chatCloseButton.addEventListener('click', () => {
+    function closeChat() {
         chatWindow.classList.add('hidden');
         initialState.style.display = 'block';
         messageCounter = 0;
-    });
+        localStorage.removeItem('chatHistory');
+        localStorage.removeItem('chatIsOpen');
+        // Возвращаем приветственное сообщение
+        chatMessages.innerHTML = `<div class="message system"><p>Здравствуйте! Я — GolubefAI, ваш персональный AI-эксперт по автоматизации. Чем могу помочь?</p></div>`;
+    }
 
-    // Отправка сообщения в n8n
+    // --- ВЗАИМОДЕЙСТВИЕ С N8N ---
+
     async function sendMessageToN8n(userMessage) {
         const n8nBackendUrl = 'https://auto.golubef.store/webhook/golubef-ai';
         const authToken = window.GOLUBEF_AI_N8N_TOKEN;
@@ -74,11 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('chatUserId', userId);
         }
 
-        const payload = {
-            sessionId: sessionId,
-            userId: userId,
-            message: userMessage
-        };
+        const payload = { sessionId, userId, message: userMessage };
 
         try {
             const response = await fetch(n8nBackendUrl, {
@@ -89,11 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(payload)
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         } catch (error) {
             console.error('Ошибка при отправке сообщения в n8n:', error);
@@ -101,7 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Основной обработчик отправки сообщений
+    // --- ГЛАВНЫЙ ОБРАБОТЧИК ---
+
     async function handleSendMessage(messageText, isQuickReply = false) {
         if (!messageText.trim()) return;
 
@@ -119,17 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = '';
         initialChatInput.value = '';
 
-        const typingIndicator = addMessage('AI печатает...', 'system');
+        const typingIndicator = addMessage('AI печатает', 'system');
         chatInput.disabled = true;
         chatSendButton.disabled = true;
-        updateQuickReplies();
 
         try {
             const n8nResponse = await sendMessageToN8n(messageText);
-
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
+            
+            if (typingIndicator) typingIndicator.remove();
 
             if (n8nResponse.action === 'error') {
                 addMessage(n8nResponse.response, 'system error');
@@ -138,14 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessage(responseText, 'assistant');
                 if (n8nResponse.quick_replies && n8nResponse.quick_replies.length > 0) {
                     updateQuickReplies(n8nResponse.quick_replies);
-                } else {
-                    updateQuickReplies();
                 }
             }
         } catch (error) {
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
+            if (typingIndicator) typingIndicator.remove();
             console.error("Ошибка в JS-логике виджета:", error);
             addMessage('Извините, произошла непредвиденная ошибка.', 'system error');
         } finally {
@@ -155,30 +168,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Слушатели событий
-    initialChatSendButton.addEventListener('click', () => {
-        handleSendMessage(initialChatInput.value);
-    });
+    // --- СЛУШАТЕЛИ СОБЫТИЙ ---
 
+    chatCloseButton.addEventListener('click', closeChat);
+
+    initialChatSendButton.addEventListener('click', () => handleSendMessage(initialChatInput.value));
     initialChatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSendMessage(initialChatInput.value);
-        }
+        if (e.key === 'Enter') handleSendMessage(initialChatInput.value);
     });
 
     document.querySelectorAll('.quick-reply-chip').forEach(button => {
-        button.addEventListener('click', () => {
-            handleSendMessage(button.textContent, true);
-        });
+        button.addEventListener('click', () => handleSendMessage(button.textContent, true));
     });
 
-    chatSendButton.addEventListener('click', () => {
-        handleSendMessage(chatInput.value);
-    });
-
+    chatSendButton.addEventListener('click', () => handleSendMessage(chatInput.value));
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSendMessage(chatInput.value);
-        }
+        if (e.key === 'Enter') handleSendMessage(chatInput.value);
     });
+
+    // --- ИНИЦИАЛИЗАЦИЯ ---
+    loadChatHistory();
 });
