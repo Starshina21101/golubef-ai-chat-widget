@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+    const chatOverlay = document.getElementById('chat-overlay');
     const initialState = document.getElementById('chat-initial-state');
     const initialChatInput = document.getElementById('initial-chat-input');
     const initialChatSendButton = document.getElementById('initial-chat-send-button');
@@ -19,10 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveChatHistory() {
         const messages = [];
         chatMessages.querySelectorAll('.message').forEach(msgDiv => {
-            messages.push({
-                text: msgDiv.querySelector('p').textContent,
-                sender: msgDiv.classList.contains('user') ? 'user' : (msgDiv.classList.contains('system') ? 'system' : 'assistant')
-            });
+            if (!msgDiv.classList.contains('typing')) { // Не сохраняем индикатор печати
+                messages.push({
+                    text: msgDiv.querySelector('p').textContent,
+                    sender: msgDiv.classList.contains('user') ? 'user' : (msgDiv.classList.contains('system') ? 'system' : 'assistant')
+                });
+            }
         });
         localStorage.setItem('chatHistory', JSON.stringify(messages));
         localStorage.setItem('chatIsOpen', 'true');
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOpen = localStorage.getItem('chatIsOpen') === 'true';
 
         if (isOpen && history && history.length > 0) {
-            chatMessages.innerHTML = ''; // Очищаем приветственное сообщение
+            chatMessages.innerHTML = '';
             history.forEach(msg => addMessage(msg.text, msg.sender, false));
             openChat();
         }
@@ -44,6 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(text, sender = 'assistant', save = true) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', sender);
+        
+        if (sender === 'system' && text.includes('печатает')) {
+            messageDiv.classList.add('typing');
+        }
+
         const p = document.createElement('p');
         p.textContent = text;
         messageDiv.appendChild(p);
@@ -69,18 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openChat() {
         initialState.style.display = 'none';
-        chatWindow.classList.remove('hidden');
+        chatOverlay.classList.add('visible');
+        chatWindow.classList.add('visible');
         chatInput.focus();
     }
 
     function closeChat() {
-        chatWindow.classList.add('hidden');
-        initialState.style.display = 'block';
+        chatWindow.classList.remove('visible');
+        chatOverlay.classList.remove('visible');
+        // Не показываем initialState, если чат был открыт
+        // initialState.style.display = 'block'; 
         messageCounter = 0;
-        localStorage.removeItem('chatHistory');
-        localStorage.removeItem('chatIsOpen');
-        // Возвращаем приветственное сообщение
-        chatMessages.innerHTML = `<div class="message system"><p>Здравствуйте! Я — GolubefAI, ваш персональный AI-эксперт по автоматизации. Чем могу помочь?</p></div>`;
     }
 
     // --- ВЗАИМОДЕЙСТВИЕ С N8N ---
@@ -106,10 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(n8nBackendUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
                 body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -125,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleSendMessage(messageText, isQuickReply = false) {
         if (!messageText.trim()) return;
 
-        if (chatWindow.classList.contains('hidden')) {
+        if (!chatWindow.classList.contains('visible')) {
             openChat();
         }
 
@@ -171,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- СЛУШАТЕЛИ СОБЫТИЙ ---
 
     chatCloseButton.addEventListener('click', closeChat);
+    chatOverlay.addEventListener('click', closeChat);
 
     initialChatSendButton.addEventListener('click', () => handleSendMessage(initialChatInput.value));
     initialChatInput.addEventListener('keypress', (e) => {
