@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(p);
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight; // Прокрутка вниз
-        return messageDiv; // ИСПРАВЛЕНО: возвращаем элемент для удаления позже
     }
 
     // Функция для очистки и добавления быстрых ответов
@@ -116,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Проверяем лимит сообщений
         if (messageCounter >= MESSAGE_LIMIT) {
             addMessage('Кажется, у вас сложный вопрос. Давайте я позову эксперта, он скоро с вами свяжется.', 'system');
-            // Здесь можно добавить логику для human_handoff, если нужно
             return;
         }
 
@@ -135,22 +133,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const n8nResponse = await sendMessageToN8n(messageText);
 
             // Удаляем индикатор печати
-            if (typingIndicator && typingIndicator.parentNode) { // ИСПРАВЛЕНО: проверка перед удалением
-                typingIndicator.remove();
-            }
+            typingIndicator.remove();
 
             if (n8nResponse.action === 'error') {
-                addMessage(n8nResponse.response, 'system'); // ИСПРАВЛЕНО: убрал класс 'error' из второго параметра
+                addMessage(n8nResponse.response, 'system error');
             } else {
                 addMessage(n8nResponse.response, 'assistant');
-                // Обработка quick_replies
                 if (n8nResponse.quick_replies && n8nResponse.quick_replies.length > 0) {
                     updateQuickReplies(n8nResponse.quick_replies);
                 } else {
                     updateQuickReplies(); // Очистить, если нет новых
                 }
 
-                // Дополнительная логика на основе action
                 if (n8nResponse.action === 'human_handoff') {
                     // Возможно, показать дополнительное UI
                 } else if (n8nResponse.action === 'lead_capture') {
@@ -158,11 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (error) {
-            if (typingIndicator && typingIndicator.parentNode) { // ИСПРАВЛЕНО: проверка перед удалением
-                typingIndicator.remove();
-            }
+            typingIndicator.remove();
             console.error("Ошибка в JS-логике виджета:", error);
-            addMessage('Извините, произошла непредвиденная ошибка.', 'system');
+            addMessage('Извините, произошла непредвиденная ошибка.', 'system error');
         } finally {
             chatInput.disabled = false;
             chatSendButton.disabled = false;
