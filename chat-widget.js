@@ -134,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (n8nResponse.action === 'error') {
                 addMessage(n8nResponse.response, 'system error');
             } else {
-                addMessage(n8nResponse.response, 'assistant');
+                const responseText = n8nResponse.response || "Я не совсем понял ваш вопрос. Можете перефразировать?";
+                addMessage(responseText, 'assistant');
                 if (n8nResponse.quick_replies && n8nResponse.quick_replies.length > 0) {
                     updateQuickReplies(n8nResponse.quick_replies);
                 } else {
