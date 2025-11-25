@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V4 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V5 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -294,16 +294,16 @@
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
-        /* --- Не прилипаем к верху, а отступаем от него --- */
-        top: 50px; /* ← Подставьте реальную высоту вашей шапки */
+        /* --- Убираем transform и центрирование --- */
+        top: 60px; /* ← Подставьте высоту вашей шапки */
         left: 0;
         width: 100%;
-        /* --- Высота: от шапки до низа экрана --- */
-        height: calc(100vh - 50px - env(safe-area-inset-bottom));
+        height: calc(100vh - 60px - env(safe-area-inset-bottom));
         max-width: 100%;
         max-height: calc(100vh - 60px - env(safe-area-inset-bottom));
         border-radius: 0;
         box-shadow: none;
+        /* --- Убираем transform и используем flex-col для правильного расположения --- */
         transform: none;
         display: flex;
         flex-direction: column;
@@ -311,10 +311,10 @@
     }
 
     #chat-window.visible {
-        transform: none;
+        transform: none; /* ← ВАЖНО: убираем transform */
     }
 
-    /* --- Заголовок --- */
+    /* --- Заголовок чата --- */
     #chat-header {
         position: sticky;
         top: 0;
@@ -333,27 +333,25 @@
         flex: 1;
         overflow-y: auto;
         padding: 15px;
-        -webkit-overflow-scrolling: touch; /* Для плавности на iOS */
+        -webkit-overflow-scrolling: touch;
     }
 
     /* --- Блок с быстрыми ответами --- */
     #chat-quick-replies {
-        flex-shrink: 0; /* Не сжимаем */
+        flex-shrink: 0;
         padding: 10px 15px 10px;
-        /* Убираем background-color, если он совпадает с #chat-input-area */
         background-color: var(--chat-dark-bg);
     }
 
-    /* --- Поле ввода и кнопка отправки --- */
+    /* --- Поле ввода --- */
     #chat-input-area {
-        flex-shrink: 0; /* Не сжимаем */
+        flex-shrink: 0;
         padding: 10px 15px;
         border-top: 1px solid var(--chat-light-bg);
         background-color: var(--chat-dark-bg);
         position: sticky;
         bottom: 0;
         z-index: 1002;
-        /* Добавляем отступ снизу для безопасной зоны */
         padding-bottom: env(safe-area-inset-bottom, 10px);
     }
 
