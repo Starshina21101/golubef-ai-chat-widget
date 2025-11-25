@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V3 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V4 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -294,25 +294,29 @@
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
+        /* --- Изменяем позиционирование --- */
         top: 0;
         left: 0;
         width: 100%;
-        /* --- Ключевое изменение: динамическая высота с учётом safe area --- */
-        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        height: 100vh;
+        height: -webkit-fill-available; /* Для iOS Safari */
         max-width: 100%;
-        max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        max-height: 100vh;
+        max-height: -webkit-fill-available; /* Для iOS Safari */
         border-radius: 0;
         box-shadow: none;
-        /* Убираем padding-top, он нам больше не нужен */
-        padding-top: 0;
-        /* Добавляем margin-bottom, чтобы не перекрывать нижнюю панель браузера */
-        margin-bottom: env(safe-area-inset-bottom);
+        /* --- Убираем transform и используем flex-col для правильного расположения --- */
+        transform: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Важно: чтобы не было скролла всего окна */
     }
+
     #chat-window.visible {
         transform: none;
     }
 
-    /* --- Заголовок чата --- */
+    /* --- Заголовок --- */
     #chat-header {
         position: sticky;
         top: 0;
@@ -326,22 +330,59 @@
         font-size: 1.1em;
     }
 
-    /* --- Блок сообщений --- */
+    /* --- Сообщения --- */
     #chat-messages {
-        flex-grow: 1;
-        padding: 15px;
+        flex: 1;
         overflow-y: auto;
-        /* Добавляем отступ снизу, чтобы не прилегать к полю ввода */
-        padding-bottom: 10px;
+        padding: 15px;
+        -webkit-overflow-scrolling: touch; /* Для плавности на iOS */
     }
 
-    /* --- Поле ввода и быстрые ответы --- */
+    /* --- Блок с быстрыми ответами --- */
+    #chat-quick-replies {
+        flex-shrink: 0; /* Не сжимаем */
+        padding: 10px 15px 10px;
+        /* Убираем background-color, если он совпадает с #chat-input-area */
+        background-color: var(--chat-dark-bg);
+    }
+
+    /* --- Поле ввода и кнопка отправки --- */
     #chat-input-area {
+        flex-shrink: 0; /* Не сжимаем */
         padding: 10px 15px;
         border-top: 1px solid var(--chat-light-bg);
         background-color: var(--chat-dark-bg);
         position: sticky;
         bottom: 0;
         z-index: 1002;
+        /* Добавляем отступ снизу для безопасной зоны */
+        padding-bottom: env(safe-area-inset-bottom, 10px);
+    }
+
+    /* --- Убираем transform у #chat-input-area, если он был --- */
+    #chat-input-area #chat-input {
+        flex-grow: 1;
+        border: none;
+        border-radius: 20px;
+        padding: 12px 18px;
+        background-color: var(--chat-light-bg);
+        color: white;
+        outline: none;
+        margin-right: 10px;
+        font-size: 1em;
+    }
+
+    #chat-input-area #chat-send-button {
+        background-color: var(--chat-primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
     }
 }
