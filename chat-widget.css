@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V2 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V3 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -246,22 +246,18 @@
 #chat-quick-replies {
     padding: 0 15px 10px;
     display: flex;
-    flex-wrap: nowrap; /* Важно: НЕ wrap! Чтобы можно было прокручивать горизонтально */
+    flex-wrap: nowrap; /* Горизонтальная прокрутка */
     gap: 8px;
     background-color: var(--chat-dark-bg);
-    overflow-x: auto; /* Разрешаем горизонтальную прокрутку */
-    -webkit-overflow-scrolling: touch; /* Для плавной прокрутки на iOS */
-    scrollbar-width: thin; /* Стиль полосы прокрутки (Firefox) */
-    scrollbar-color: rgba(255,255,255,0.2) transparent; /* Цвет ползунка и фона */
-
-    /* Убираем вертикальный скролл, если он не нужен */
-    overflow-y: hidden;
-
-    /* Добавляем небольшой отступ справа, чтобы ползунок не прилегал к краю */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
     padding-right: 10px;
+    /* Убираем вертикальный скролл */
+    overflow-y: hidden;
 }
 
-/* --- Стиль полосы прокрутки для WebKit (Chrome, Safari, Edge) --- */
 #chat-quick-replies::-webkit-scrollbar {
     height: 6px;
 }
@@ -279,29 +275,73 @@
     background: rgba(255,255,255,0.3);
 }
 
+.quick-reply-button {
+    background-color: var(--chat-light-bg);
+    color: var(--chat-text-color);
+    border: 1px solid #5a5a5a;
+    border-radius: 18px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.quick-reply-button:hover {
+    background-color: var(--chat-primary-color);
+    border-color: var(--chat-primary-color);
+}
+
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
         top: 0;
         left: 0;
         width: 100%;
-        height: 95vh; /* Используем vh вместо % для точности */
+        /* --- Ключевое изменение: динамическая высота с учётом safe area --- */
+        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         max-width: 100%;
-        max-height: 95vh;
+        max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         border-radius: 0;
         box-shadow: none;
-        /* --- Ключевое изменение: отступ сверху --- */
-        padding-top: 60px; /* Подставьте реальную высоту вашей шапки */
-        /* Если шапка имеет padding или margin, добавьте их тоже */
+        /* Убираем padding-top, он нам больше не нужен */
+        padding-top: 0;
+        /* Добавляем margin-bottom, чтобы не перекрывать нижнюю панель браузера */
+        margin-bottom: env(safe-area-inset-bottom);
     }
     #chat-window.visible {
         transform: none;
     }
 
-    /* --- Дополнительно: если нужно, чтобы заголовок чата был виден сразу --- */
+    /* --- Заголовок чата --- */
     #chat-header {
         position: sticky;
         top: 0;
-        z-index: 1002; /* Чтобы заголовок оставался поверх сообщений при скролле */
+        z-index: 1002;
+        background-color: var(--chat-dark-bg);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+
+    /* --- Блок сообщений --- */
+    #chat-messages {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        /* Добавляем отступ снизу, чтобы не прилегать к полю ввода */
+        padding-bottom: 10px;
+    }
+
+    /* --- Поле ввода и быстрые ответы --- */
+    #chat-input-area {
+        padding: 10px 15px;
+        border-top: 1px solid var(--chat-light-bg);
+        background-color: var(--chat-dark-bg);
+        position: sticky;
+        bottom: 0;
+        z-index: 1002;
     }
 }
