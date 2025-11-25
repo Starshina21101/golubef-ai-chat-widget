@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // ... (твой существующий код констант и инициализации)
   const chatOverlay = document.getElementById("chat-overlay");
   const initialState = document.getElementById("chat-initial-state");
   const initialChatInput = document.getElementById("initial-chat-input");
@@ -25,10 +24,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // USER ID
   let userId = localStorage.getItem("chatUserId");
   if (!userId) {
-    userId = "guest_" + crypto.randomUUID(); // заменяем дефис на _
+    userId = "guest_" + crypto.randomUUID();
     localStorage.setItem("chatUserId", userId);
   }
-  window.chatUserId = userId;
+  window.chatUserId = userId; // Теперь всегда устанавливаем
 
   function saveChatHistory() {
     const messages = [];
@@ -60,10 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const messageDiv = document.createElement("div");
     messageDiv.classList.add("message", sender);
 
-    // Интеграция фидбека
     if (typeof text === "string" && text.includes('data-score="1"')) {
       messageDiv.innerHTML = text;
-      // Обработчики для фидбек-кнопок
       messageDiv.querySelectorAll('button[data-score]').forEach(btn => {
         btn.onclick = function () {
           btn.disabled = true;
@@ -130,8 +127,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (feedbackDiv) feedbackDiv.innerHTML = `<p style="color:#ef4444;font-weight:600;">${msg}</p>`;
   }
 
-  // ... (остальной твой код: updateQuickReplies, openChat, closeChat, и т.п.)
-
   async function sendMessageToN8n(userMessage) {
     const n8nBackendUrl = "https://auto.golubef.store/webhook/golubef-ai";
     const authToken = window.GOLUBEFAIN8NTOKEN || "";
@@ -142,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
       
     let payload = {
       sessionId: window.chatSessionId,
-      userId: cleanUserId, // отправляем без приставки
+      userId: cleanUserId,
       message: userMessage,
     };
     try {
@@ -181,7 +176,6 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const n8nResponse = await sendMessageToN8n(messageText);
       if (typingIndicator) typingIndicator.remove();
-      // Фронт для action request_feedback
       if (n8nResponse.action === "request_feedback") {
         setSessionId(n8nResponse.sessionId);
         addMessage(n8nResponse.feedbackUI, "assistant", true);
@@ -189,7 +183,9 @@ document.addEventListener("DOMContentLoaded", function () {
         addMessage(n8nResponse.response || "Нет ответа.", "assistant", true);
       }
       if (n8nResponse.quickreplies && n8nResponse.quickreplies.length > 0) {
-        updateQuickReplies(n8nResponse.quickreplies);
+        // ЗДЕСЬ ДОЛЖНА БЫТЬ updateQuickReplies, но она не объявлена
+        // Если у вас есть функция updateQuickReplies, раскомментируйте:
+        // updateQuickReplies(n8nResponse.quickreplies);
       }
     } catch (error) {
       if (typingIndicator) typingIndicator.remove();
@@ -219,8 +215,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const text = initialChatInput?.value;
     if (text) handleSendMessage(text);
   });
-
-  // ... (твои обработчики для кнопок, открытия/закрытия и другие вспомогательные функции)
 
   loadChatHistory();
 });
