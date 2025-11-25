@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // USER ID
   let userId = localStorage.getItem("chatUserId");
   if (!userId) {
-    userId = "guest-" + crypto.randomUUID();
+    userId = "guest_" + crypto.randomUUID(); // заменяем дефис на _
     localStorage.setItem("chatUserId", userId);
   }
   window.chatUserId = userId;
@@ -135,9 +135,14 @@ document.addEventListener("DOMContentLoaded", function () {
   async function sendMessageToN8n(userMessage) {
     const n8nBackendUrl = "https://auto.golubef.store/webhook/golubef-ai";
     const authToken = window.GOLUBEFAIN8NTOKEN || "";
+    // Убираем приставку guest_ при отправке в бэкенд
+    const cleanUserId = window.chatUserId.startsWith('guest_') 
+      ? window.chatUserId.substring(6) 
+      : window.chatUserId;
+      
     let payload = {
       sessionId: window.chatSessionId,
-      userId: window.chatUserId,
+      userId: cleanUserId, // отправляем без приставки
       message: userMessage,
     };
     try {
