@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V5 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V6 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -31,7 +31,7 @@
     visibility: visible;
 }
 
-/* --- НАЧАЛЬНОЕ СОСТОЯНИЕ (ВСТРОЕННОЕ ПОЛЕ) --- */
+/* --- НАЧАЛЬНОЕ СОСТЯНИЕ (ВСТРОЕННОЕ ПОЛЕ) --- */
 #chat-initial-state {
     background-color: var(--chat-dark-bg);
     padding: 25px;
@@ -294,16 +294,15 @@
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
-        /* --- Убираем transform и центрирование --- */
-        top: 60px; /* ← Подставьте высоту вашей шапки */
+        /* --- Используем dvh вместо vh --- */
+        top: 0;
         left: 0;
         width: 100%;
-        height: calc(100vh - 60px - env(safe-area-inset-bottom));
+        height: 100dvh; /* ← Ключевое изменение */
         max-width: 100%;
-        max-height: calc(100vh - 60px - env(safe-area-inset-bottom));
+        max-height: 100dvh; /* ← Ключевое изменение */
         border-radius: 0;
         box-shadow: none;
-        /* --- Убираем transform и используем flex-col для правильного расположения --- */
         transform: none;
         display: flex;
         flex-direction: column;
@@ -311,7 +310,7 @@
     }
 
     #chat-window.visible {
-        transform: none; /* ← ВАЖНО: убираем transform */
+        transform: none;
     }
 
     /* --- Заголовок чата --- */
@@ -341,6 +340,8 @@
         flex-shrink: 0;
         padding: 10px 15px 10px;
         background-color: var(--chat-dark-bg);
+        /* Убираем, если не нужен */
+        /* display: none; */
     }
 
     /* --- Поле ввода --- */
@@ -352,10 +353,10 @@
         position: sticky;
         bottom: 0;
         z-index: 1002;
-        padding-bottom: env(safe-area-inset-bottom, 10px);
+        /* Убираем отступ safe-area, т.к. dvh уже учитывает это */
+        padding-bottom: 0;
     }
 
-    /* --- Убираем transform у #chat-input-area, если он был --- */
     #chat-input-area #chat-input {
         flex-grow: 1;
         border: none;
