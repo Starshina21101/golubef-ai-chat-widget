@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let messageCounter = 0;
   const MESSAGELIMIT = 15;
 
-  // SESSION ID генерация и хранение
+  // SESSION ID генерация и хранение v2.1
   let sessionId = localStorage.getItem("chatSessionId");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("chatUserId", userId);
   }
   window.chatUserId = userId;
+
+  console.log("🔒 Chat initialized:", { sessionId: window.chatSessionId, userId: window.chatUserId });
 
   // Быстрые ответы
   function updateQuickReplies(replies) {
@@ -48,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     messageDiv.classList.add("message", sender);
 
     // --- Фидбек UI приходящий от бэка
-    if (typeof text === "string" && (text.includes('data-score="1"') || text.includes('data-score="-1"'))) {
+    if (typeof text === "string" && (text.includes('data-score="1"') || text.includes('data-score="-1"') || text.includes('data-score="0"'))) {
       messageDiv.innerHTML = text;
       const feedbackButtons = messageDiv.querySelectorAll('[data-score]');
       feedbackButtons.forEach(btn => {
@@ -59,7 +61,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const score = Number(btn.getAttribute("data-score"));
           const textarea = messageDiv.querySelector("#feedbackComment");
           const comment = textarea ? textarea.value.trim() : "";
-          sendFeedback(score, comment, window.chatSessionId, messageDiv);
+          
+          // КРИТИЧНО: Убедиться что sessionId есть и актуален перед отправкой фидбека
+          const currentSessionId = localStorage.getItem("chatSessionId") || window.chatSessionId;
+          console.log("📤 Отправка фидбека с sessionId:", currentSessionId);
+          
+          sendFeedback(score, comment, currentSessionId, messageDiv);
         };
       });
     } else {
@@ -75,16 +82,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return messageDiv;
   }
 
-  // --- Сессия
+  // --- Сессия - КРИТИЧНО
   function setSessionId(newId) {
+    console.log("🔄 SessionId обновлён:", newId);
     window.chatSessionId = newId;
     localStorage.setItem("chatSessionId", newId);
   }
 
-  // --- Фидбек отправка на n8n
+  // --- Фидбек отправка на n8n - КРИТИЧНО: сохранение sessionId
   function sendFeedback(score, comment, sessionId, messageDiv) {
-    if (!sessionId) sessionId = window.chatSessionId;
-    
+    // КРИТИЧНО: Убедиться что есть sessionId
+    if (!sessionId) {
+      sessionId = localStorage.getItem("chatSessionId") || window.chatSessionId;
+      console.warn("⚠️ SessionId был null, восстановлен из localStorage:", sessionId);
+    }
+
+    if (!sessionId) {
+      console.error("❌ КРИТИЧНО: SessionId всё ещё null!");
+      alert("Ошибка: потеря сессии. Пожалуйста, перезагрузите страницу");
+      return;
+    }
+
+    console.log("📤 Отправляем фидбек:", { score, comment, sessionId });
+
     fetch("https://auto.golubef.store/webhook/golubef-feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,13 +116,22 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then(res => res.json())
     .then(data => {
+      console.log("✅ Фидбек отправлен успешно:", data);
+      
+      // КРИТИЧНО: Сохранить sessionId после успешной отправки фидбека
+      localStorage.setItem("chatSessionId", sessionId);
+      window.chatSessionId = sessionId;
+      
       // Заменяем фидбек-блок на благодарность
       if (messageDiv) {
         messageDiv.innerHTML = `<div style="text-align:center;padding:20px;"><p style="color:#22c55e;font-weight:600;font-size:15px;">${data.message || "Спасибо за обратную связь!"}</p></div>`;
       }
+      
+      // КРИТИЧНО: После успешного фидбека, sessionId готов для следующего сообщения
+      console.log("🔒 SessionId после фидбека (готов к использованию):", sessionId);
     })
     .catch(err => {
-      console.error("Feedback error:", err);
+      console.error("❌ Feedback error:", err);
       // Разблокируем кнопки при ошибке
       if (messageDiv) {
         const btns = messageDiv.querySelectorAll('[data-score]');
@@ -156,18 +185,30 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.removeItem("chatIsOpen");
   }
 
-  // --- Основная логика запроса к n8n
+  // --- Основная логика запроса к n8n - КРИТИЧНО: проверка sessionId
   async function sendMessageToN8n(userMessage) {
+    // КРИТИЧНО: Убедиться что sessionId есть ДО отправки сообщения
+    let currentSessionId = localStorage.getItem("chatSessionId");
+    if (!currentSessionId) {
+      currentSessionId = window.chatSessionId;
+      localStorage.setItem("chatSessionId", currentSessionId);
+      console.warn("⚠️ SessionId был потерян, восстановлен из window:", currentSessionId);
+    }
+
     const n8nBackendUrl = "https://auto.golubef.store/webhook/golubef-ai";
     const authToken = window.GOLUBEFAIN8NTOKEN || "";
     const cleanUserId = window.chatUserId.startsWith('guest_') 
       ? window.chatUserId.substring(6) 
       : window.chatUserId;
+    
     let payload = {
-      sessionId: window.chatSessionId,
+      sessionId: currentSessionId,
       userId: cleanUserId,
       message: userMessage,
     };
+
+    console.log("📤 Отправка сообщения в n8n:", { sessionId: payload.sessionId, userId: payload.userId, message: userMessage });
+
     try {
       const response = await fetch(n8nBackendUrl, {
         method: "POST",
@@ -178,9 +219,21 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error("HTTP error! status: " + response.status);
-      return await response.json();
+      
+      const responseData = await response.json();
+      
+      // КРИТИЧНО: Обновить sessionId если пришёл в ответе
+      if (responseData.sessionId) {
+        setSessionId(responseData.sessionId);
+        console.log("✅ SessionId обновлён из ответа:", responseData.sessionId);
+      }
+      
+      // КРИТИЧНО: Убедиться что sessionId сохранён перед возвратом ответа
+      localStorage.setItem("chatSessionId", currentSessionId);
+      
+      return responseData;
     } catch (error) {
-      console.error("n8n", error);
+      console.error("❌ n8n error:", error);
       return { action: "error", response: "Ошибка! Не удалось отправить сообщение.", error };
     }
   }
@@ -193,6 +246,17 @@ document.addEventListener("DOMContentLoaded", function () {
       addMessage("Чат ограничен по количеству сообщений. Обновите страницу для нового диалога.", "system");
       return;
     }
+
+    // КРИТИЧНО: Проверить sessionId перед отправкой
+    const checkSessionId = localStorage.getItem("chatSessionId");
+    if (!checkSessionId) {
+      console.error("❌ КРИТИЧНО: SessionId потерян перед sendMessage! Line 93 ошибка!");
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem("chatSessionId", newSessionId);
+      window.chatSessionId = newSessionId;
+      console.log("⚠️ SessionId восстановлен:", newSessionId);
+    }
+
     addMessage(messageText, "user");
     messageCounter++;
     if (chatInput) chatInput.value = "";
@@ -205,18 +269,23 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const n8nResponse = await sendMessageToN8n(messageText);
       if (typingIndicator) typingIndicator.remove();
+      
       if (n8nResponse.action === "request_feedback") {
-        setSessionId(n8nResponse.sessionId);
+        // КРИТИЧНО: Обновить sessionId при запросе фидбека
+        if (n8nResponse.sessionId) {
+          setSessionId(n8nResponse.sessionId);
+        }
         addMessage(n8nResponse.feedbackUI, "assistant", true);
       } else {
         addMessage(n8nResponse.response || "Нет ответа.", "assistant", true);
       }
+      
       if (n8nResponse.quickreplies && n8nResponse.quickreplies.length > 0) {
         updateQuickReplies(n8nResponse.quickreplies);
       }
     } catch (error) {
       if (typingIndicator) typingIndicator.remove();
-      console.error("JS-ошибка:", error);
+      console.error("❌ JS-ошибка:", error);
       addMessage("Ошибка отправки сообщения.", "system");
     } finally {
       if (chatInput) chatInput.disabled = false;
