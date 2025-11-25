@@ -19,7 +19,8 @@ body {
   bottom: 100px;
   right: 20px;
   width: 380px;
-  height: 620px;
+  height: auto;
+  max-height: 620px;
   background: white;
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -56,8 +57,8 @@ body {
     width: 100vw;
     height: 100vh;
     height: -webkit-fill-available;
-    border-radius: 0;
     max-height: none;
+    border-radius: 0;
   }
 }
 
@@ -171,11 +172,13 @@ body {
   padding: 20px;
   background: #fafbfc;
   -webkit-overflow-scrolling: touch;
+  min-height: 200px;
 }
 
 @media screen and (max-width: 768px) {
   #chat-messages {
     padding: 16px;
+    min-height: 150px;
   }
 }
 
@@ -251,6 +254,56 @@ body {
 
 .message.user .message-time {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* Quick reply buttons - IMPORTANT: visible area */
+#chat-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  border-top: 1px solid #e8eaed;
+  flex-shrink: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+@media screen and (max-width: 768px) {
+  #chat-quick-replies {
+    padding: 8px 12px;
+    gap: 6px;
+    max-height: 120px;
+  }
+}
+
+.quick-reply-button {
+  background: #e8f0fe;
+  color: #1967d2;
+  border: 1px solid #d2e3fc;
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .quick-reply-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+.quick-reply-button:hover {
+  background: #d2e3fc;
+}
+
+.quick-reply-button:active {
+  transform: scale(0.95);
 }
 
 #chat-input-container {
@@ -353,30 +406,6 @@ body {
   height: 20px;
 }
 
-/* Quick reply buttons */
-.quick-reply-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 10px 20px 0;
-}
-
-.quick-reply-button {
-  background: #e8f0fe;
-  color: #1967d2;
-  border: 1px solid #d2e3fc;
-  border-radius: 16px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-reply-button:hover {
-  background: #d2e3fc;
-}
-
 /* Feedback UI Styles */
 .feedback-container {
   background: #f0f4f8;
@@ -464,61 +493,3 @@ body {
 .feedback-textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #d2e3fc;
-  border-radius: 8px;
-  background: white;
-  color: #333;
-  font-size: 14px;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 70px;
-  margin-bottom: 12px;
-  outline: none;
-}
-
-@media screen and (max-width: 768px) {
-  .feedback-textarea {
-    padding: 10px;
-    font-size: 14px;
-    min-height: 60px;
-    margin-bottom: 10px;
-  }
-}
-
-.feedback-textarea:focus {
-  border-color: #0088cc;
-  background: #fafbfc;
-}
-
-.feedback-submit-button {
-  background: #0088cc;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  width: 100%;
-  transition: all 0.2s ease;
-}
-
-@media screen and (max-width: 768px) {
-  .feedback-submit-button {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-}
-
-.feedback-submit-button:hover {
-  background: #005f8a;
-}
-
-.feedback-submit-button:active {
-  transform: scale(0.95);
-}
-
-.feedback-submit-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6
