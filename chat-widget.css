@@ -294,22 +294,20 @@
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
-        /* --- Изменяем позиционирование --- */
-        top: 0;
+        /* --- Не прилипаем к верху, а отступаем от него --- */
+        top: 50px; /* ← Подставьте реальную высоту вашей шапки */
         left: 0;
         width: 100%;
-        height: 100vh;
-        height: -webkit-fill-available; /* Для iOS Safari */
+        /* --- Высота: от шапки до низа экрана --- */
+        height: calc(100vh - 50px - env(safe-area-inset-bottom));
         max-width: 100%;
-        max-height: 100vh;
-        max-height: -webkit-fill-available; /* Для iOS Safari */
+        max-height: calc(100vh - 60px - env(safe-area-inset-bottom));
         border-radius: 0;
         box-shadow: none;
-        /* --- Убираем transform и используем flex-col для правильного расположения --- */
         transform: none;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Важно: чтобы не было скролла всего окна */
+        overflow: hidden;
     }
 
     #chat-window.visible {
