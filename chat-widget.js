@@ -27,39 +27,30 @@ document.addEventListener("DOMContentLoaded", function () {
     userId = "guest_" + crypto.randomUUID();
     localStorage.setItem("chatUserId", userId);
   }
-  window.chatUserId = userId; // Теперь всегда устанавливаем
+  window.chatUserId = userId;
 
-  function saveChatHistory() {
-    const messages = [];
-    chatMessages.querySelectorAll(".message").forEach(msgDiv => {
-      if (!msgDiv.classList.contains("typing")) {
-        messages.push({
-          text: msgDiv.textContent,
-          sender: msgDiv.classList.contains("user") ? "user"
-                : msgDiv.classList.contains("system") ? "system"
-                : "assistant"
-        });
-      }
+  // --- Быстрые ответы (quick-replies)
+  function updateQuickReplies(replies) {
+    if (!chatQuickReplies) return;
+    chatQuickReplies.innerHTML = "";
+    replies.forEach(reply => {
+      const button = document.createElement("button");
+      button.classList.add("quick-reply-button");
+      button.textContent = reply.title;
+      button.onclick = () => handleSendMessage(reply.payload, true);
+      chatQuickReplies.appendChild(button);
     });
-    localStorage.setItem("chatHistory", JSON.stringify(messages));
-    localStorage.setItem("chatIsOpen", "true");
   }
 
-  function loadChatHistory() {
-    const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
-    const isOpen = localStorage.getItem("chatIsOpen");
-    if (isOpen && history.length > 0) {
-      chatMessages.innerHTML = "";
-      history.forEach(msg => addMessage(msg.text, msg.sender, false));
-      openChat();
-    }
-  }
-
+  // --- Главный вывод сообщения (обычный, фидбек, системный)
   function addMessage(text, sender = "assistant", save = true) {
     const messageDiv = document.createElement("div");
     messageDiv.classList.add("message", sender);
 
+    // Фидбек-блок (HTML с кнопками)
+    let isFeedbackUI = false;
     if (typeof text === "string" && text.includes('data-score="1"')) {
+      isFeedbackUI = true;
       messageDiv.innerHTML = text;
       messageDiv.querySelectorAll('button[data-score]').forEach(btn => {
         btn.onclick = function () {
@@ -70,22 +61,28 @@ document.addEventListener("DOMContentLoaded", function () {
           sendFeedback(score, comment, window.chatSessionId);
         };
       });
-    } else {
+    }
+
+    if (!isFeedbackUI) {
+      // Стандартное сообщение
       const p = document.createElement("p");
       p.textContent = text;
       messageDiv.appendChild(p);
     }
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     if (save) saveChatHistory();
     return messageDiv;
   }
 
+  // --- Сессия (ID, сохранение)
   function setSessionId(newId) {
     window.chatSessionId = newId;
     localStorage.setItem("chatSessionId", newId);
   }
 
+  // --- Фидбек: POST на n8n + сам UI
   function sendFeedback(score, comment, sessionId) {
     if (!sessionId) sessionId = window.chatSessionId;
     fetch("https://auto.golubef.store/webhook/golubef-feedback", {
@@ -109,32 +106,69 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function displayFeedbackSuccess(html) {
-    const feedbackBtn = document.querySelector('[data-score="1"]');
-    if (!feedbackBtn) {
-      console.warn("Feedback button not found");
-      return;
+    const feedbackBtns = chatMessages.querySelectorAll('[data-score="1"]');
+    if (feedbackBtns.length) {
+      const feedbackDiv = feedbackBtns[feedbackBtns.length - 1].closest("div");
+      if (feedbackDiv) feedbackDiv.innerHTML = html;
     }
-    const feedbackDiv = feedbackBtn.closest("div");
-    if (feedbackDiv) feedbackDiv.innerHTML = html;
   }
   function displayFeedbackError(msg) {
-    const feedbackBtn = document.querySelector('[data-score="1"]');
-    if (!feedbackBtn) {
-      console.warn("Feedback button not found");
-      return;
+    const feedbackBtns = chatMessages.querySelectorAll('[data-score="1"]');
+    if (feedbackBtns.length) {
+      const feedbackDiv = feedbackBtns[feedbackBtns.length - 1].closest("div");
+      if (feedbackDiv) feedbackDiv.innerHTML = `<p style="color:#ef4444;font-weight:600;">${msg}</p>`;
     }
-    const feedbackDiv = feedbackBtn.closest("div");
-    if (feedbackDiv) feedbackDiv.innerHTML = `<p style="color:#ef4444;font-weight:600;">${msg}</p>`;
   }
 
+  // --- История чата
+  function saveChatHistory() {
+    const messages = [];
+    chatMessages.querySelectorAll(".message").forEach(msgDiv => {
+      if (!msgDiv.classList.contains("typing")) {
+        messages.push({
+          text: msgDiv.textContent,
+          sender: msgDiv.classList.contains("user") ? "user"
+                : msgDiv.classList.contains("system") ? "system"
+                : "assistant"
+        });
+      }
+    });
+    localStorage.setItem("chatHistory", JSON.stringify(messages));
+    localStorage.setItem("chatIsOpen", "true");
+  }
+  function loadChatHistory() {
+    const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+    const isOpen = localStorage.getItem("chatIsOpen");
+    if (isOpen && history.length > 0) {
+      chatMessages.innerHTML = "";
+      history.forEach(msg => addMessage(msg.text, msg.sender, false));
+      openChat();
+    }
+  }
+
+  // --- UI open/close
+  function openChat() {
+    initialState.style.display = "none";
+    chatOverlay.classList.add("visible");
+    chatWindow.classList.add("visible");
+    if (chatInput) chatInput.focus();
+  }
+  function closeChat() {
+    chatWindow.classList.remove("visible");
+    chatOverlay.classList.remove("visible");
+    initialState.style.display = "block";
+    messageCounter = 0;
+    localStorage.removeItem("chatIsOpen");
+  }
+
+  // --- Основная ручка отправки запросов к n8n
   async function sendMessageToN8n(userMessage) {
     const n8nBackendUrl = "https://auto.golubef.store/webhook/golubef-ai";
     const authToken = window.GOLUBEFAIN8NTOKEN || "";
-    // Убираем приставку guest_ при отправке в бэкенд
+    // Убираем приставку guest_ при отправке
     const cleanUserId = window.chatUserId.startsWith('guest_') 
       ? window.chatUserId.substring(6) 
       : window.chatUserId;
-      
     let payload = {
       sessionId: window.chatSessionId,
       userId: cleanUserId,
@@ -157,6 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // --- Единственная точка отправки (сообщение / быстрый ответ / фидбек)
   async function handleSendMessage(messageText, isQuickReply = false) {
     if (!messageText.trim()) return;
     if (!chatWindow.classList.contains("visible")) openChat();
@@ -183,9 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
         addMessage(n8nResponse.response || "Нет ответа.", "assistant", true);
       }
       if (n8nResponse.quickreplies && n8nResponse.quickreplies.length > 0) {
-        // ЗДЕСЬ ДОЛЖНА БЫТЬ updateQuickReplies, но она не объявлена
-        // Если у вас есть функция updateQuickReplies, раскомментируйте:
-        // updateQuickReplies(n8nResponse.quickreplies);
+        updateQuickReplies(n8nResponse.quickreplies);
       }
     } catch (error) {
       if (typingIndicator) typingIndicator.remove();
@@ -198,23 +231,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Привязка обработчиков событий
-  chatSendButton?.addEventListener("click", () => {
-    const text = chatInput?.value;
-    if (text) handleSendMessage(text);
-  });
-
-  chatInput?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      const text = chatInput?.value;
-      if (text) handleSendMessage(text);
-    }
-  });
-
-  initialChatSendButton?.addEventListener("click", () => {
-    const text = initialChatInput?.value;
-    if (text) handleSendMessage(text);
-  });
+  // --- Привязка всех обработчиков
+  if (chatCloseButton) chatCloseButton.addEventListener("click", closeChat);
+  if (chatOverlay) chatOverlay.addEventListener("click", closeChat);
+  if (initialChatSendButton) initialChatSendButton.addEventListener("click", () => handleSendMessage(initialChatInput.value));
+  if (initialChatInput) initialChatInput.addEventListener("keypress", e => { if (e.key === "Enter") handleSendMessage(initialChatInput.value); });
+  document.querySelectorAll(".quick-reply-chip").forEach(button => { button.addEventListener("click", () => handleSendMessage(button.textContent, true)); });
+  if (chatSendButton) chatSendButton.addEventListener("click", () => handleSendMessage(chatInput.value));
+  if (chatInput) chatInput.addEventListener("keypress", e => { if (e.key === "Enter") handleSendMessage(chatInput.value); });
 
   loadChatHistory();
 });
