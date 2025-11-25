@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   window.chatUserId = userId;
 
-  // --- Быстрые ответы (quick-replies)
+  // Быстрые ответы
   function updateQuickReplies(replies) {
     if (!chatQuickReplies) return;
     chatQuickReplies.innerHTML = "";
@@ -42,15 +42,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Главный вывод сообщения (обычный, фидбек, системный)
+  // Основной вывод сообщений
   function addMessage(text, sender = "assistant", save = true) {
     const messageDiv = document.createElement("div");
     messageDiv.classList.add("message", sender);
 
-    // Фидбек-блок (HTML с кнопками)
-    let isFeedbackUI = false;
+    // --- Фидбек UI приходящий от бэка
     if (typeof text === "string" && text.includes('data-score="1"')) {
-      isFeedbackUI = true;
       messageDiv.innerHTML = text;
       messageDiv.querySelectorAll('button[data-score]').forEach(btn => {
         btn.onclick = function () {
@@ -61,10 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
           sendFeedback(score, comment, window.chatSessionId);
         };
       });
-    }
-
-    if (!isFeedbackUI) {
-      // Стандартное сообщение
+    } else {
+      // Обычный текст/ответ
       const p = document.createElement("p");
       p.textContent = text;
       messageDiv.appendChild(p);
@@ -76,13 +72,13 @@ document.addEventListener("DOMContentLoaded", function () {
     return messageDiv;
   }
 
-  // --- Сессия (ID, сохранение)
+  // --- Сессия
   function setSessionId(newId) {
     window.chatSessionId = newId;
     localStorage.setItem("chatSessionId", newId);
   }
 
-  // --- Фидбек: POST на n8n + сам UI
+  // --- Фидбек отправка на n8n
   function sendFeedback(score, comment, sessionId) {
     if (!sessionId) sessionId = window.chatSessionId;
     fetch("https://auto.golubef.store/webhook/golubef-feedback", {
@@ -120,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- История чата
+  // --- История
   function saveChatHistory() {
     const messages = [];
     chatMessages.querySelectorAll(".message").forEach(msgDiv => {
@@ -161,11 +157,10 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.removeItem("chatIsOpen");
   }
 
-  // --- Основная ручка отправки запросов к n8n
+  // --- Основная логика запроса к n8n
   async function sendMessageToN8n(userMessage) {
     const n8nBackendUrl = "https://auto.golubef.store/webhook/golubef-ai";
     const authToken = window.GOLUBEFAIN8NTOKEN || "";
-    // Убираем приставку guest_ при отправке
     const cleanUserId = window.chatUserId.startsWith('guest_') 
       ? window.chatUserId.substring(6) 
       : window.chatUserId;
@@ -191,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- Единственная точка отправки (сообщение / быстрый ответ / фидбек)
+  // --- handleSendMessage для чата/быстрых кнопок/всех сценариев
   async function handleSendMessage(messageText, isQuickReply = false) {
     if (!messageText.trim()) return;
     if (!chatWindow.classList.contains("visible")) openChat();
@@ -231,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- Привязка всех обработчиков
+  // --- Привязка событий
   if (chatCloseButton) chatCloseButton.addEventListener("click", closeChat);
   if (chatOverlay) chatOverlay.addEventListener("click", closeChat);
   if (initialChatSendButton) initialChatSendButton.addEventListener("click", () => handleSendMessage(initialChatInput.value));
