@@ -48,15 +48,18 @@ document.addEventListener("DOMContentLoaded", function () {
     messageDiv.classList.add("message", sender);
 
     // --- Фидбек UI приходящий от бэка
-    if (typeof text === "string" && text.includes('data-score="1"')) {
+    if (typeof text === "string" && (text.includes('data-score="1"') || text.includes('data-score="-1"'))) {
       messageDiv.innerHTML = text;
-      messageDiv.querySelectorAll('button[data-score]').forEach(btn => {
-        btn.onclick = function () {
+      const feedbackButtons = messageDiv.querySelectorAll('[data-score]');
+      feedbackButtons.forEach(btn => {
+        btn.onclick = function (e) {
+          e.preventDefault();
           btn.disabled = true;
-          btn.style.opacity = "0.6";
+          btn.style.opacity = "0.5";
           const score = Number(btn.getAttribute("data-score"));
-          const comment = messageDiv.querySelector("#feedbackComment") ? messageDiv.querySelector("#feedbackComment").value : "";
-          sendFeedback(score, comment, window.chatSessionId);
+          const textarea = messageDiv.querySelector("#feedbackComment");
+          const comment = textarea ? textarea.value.trim() : "";
+          sendFeedback(score, comment, window.chatSessionId, messageDiv);
         };
       });
     } else {
@@ -79,8 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // --- Фидбек отправка на n8n
-  function sendFeedback(score, comment, sessionId) {
+  function sendFeedback(score, comment, sessionId, messageDiv) {
     if (!sessionId) sessionId = window.chatSessionId;
+    
     fetch("https://auto.golubef.store/webhook/golubef-feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,28 +96,23 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then(res => res.json())
     .then(data => {
-        const successHtml = `<div style="text-align:center;padding:20px;"><p style="color:#22c55e;font-weight:600;">${data.message || "Спасибо за обратную связь!"}</p></div>`;
-        displayFeedbackSuccess(successHtml);
+      // Заменяем фидбек-блок на благодарность
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div style="text-align:center;padding:20px;"><p style="color:#22c55e;font-weight:600;font-size:15px;">${data.message || "Спасибо за обратную связь!"}</p></div>`;
+      }
     })
     .catch(err => {
-        displayFeedbackError("Ошибка отправки фидбека! Попробуйте позже.");
-        console.error("Feedback error:", err);
+      console.error("Feedback error:", err);
+      // Разблокируем кнопки при ошибке
+      if (messageDiv) {
+        const btns = messageDiv.querySelectorAll('[data-score]');
+        btns.forEach(b => { 
+          b.disabled = false; 
+          b.style.opacity = "1"; 
+        });
+      }
+      alert("Ошибка отправки фидбека! Попробуйте позже.");
     });
-  }
-
-  function displayFeedbackSuccess(html) {
-    const feedbackBtns = chatMessages.querySelectorAll('[data-score="1"]');
-    if (feedbackBtns.length) {
-      const feedbackDiv = feedbackBtns[feedbackBtns.length - 1].closest("div");
-      if (feedbackDiv) feedbackDiv.innerHTML = html;
-    }
-  }
-  function displayFeedbackError(msg) {
-    const feedbackBtns = chatMessages.querySelectorAll('[data-score="1"]');
-    if (feedbackBtns.length) {
-      const feedbackDiv = feedbackBtns[feedbackBtns.length - 1].closest("div");
-      if (feedbackDiv) feedbackDiv.innerHTML = `<p style="color:#ef4444;font-weight:600;">${msg}</p>`;
-    }
   }
 
   // --- История
