@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let messageCounter = 0;
   const MESSAGELIMIT = 15;
 
-  // SESSION ID генерация и хранение v2.4
+  // SESSION ID генерация и хранение v2.5
   let sessionId = localStorage.getItem("chatSessionId");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
