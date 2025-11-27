@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V6 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V7 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -154,6 +154,38 @@
 }
 #chat-close-button:hover { background-color: rgba(255, 255, 255, 0.1); }
 
+#chat-clear-button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    margin-right: auto;
+    margin-left: 10px;
+}
+#chat-clear-button:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#chat-clear-button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    margin-right: auto;
+    margin-left: 10px;
+}
+#chat-clear-button:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 #chat-messages {
     flex-grow: 1;
     padding: 15px;
@@ -242,7 +274,27 @@
     transition: background-color 0.2s ease;
 }
 
+#chat-input-area #chat-input:disabled,
+#chat-input-area #chat-send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#chat-input-area #chat-send-button:disabled {
+    background-color: var(--chat-light-bg);
+}
+
 /* --- БЫСТРЫЕ ОТВЕТЫ ВНУТРИ ЧАТА --- */
+
+#chat-input-area #chat-input:disabled,
+#chat-input-area #chat-send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#chat-input-area #chat-send-button:disabled {
+    background-color: var(--chat-light-bg);
+}
 #chat-quick-replies {
     padding: 0 15px 10px;
     display: flex;
