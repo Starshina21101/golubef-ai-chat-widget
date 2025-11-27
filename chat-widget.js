@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let messageCounter = 0;
   const MESSAGELIMIT = 15;
 
-  // SESSION ID генерация и хранение v2.2
+  // SESSION ID генерация и хранение v2.3
   let sessionId = localStorage.getItem("chatSessionId");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
@@ -251,7 +251,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (n8nResponse.sessionId) {
           setSessionId(n8nResponse.sessionId);
         }
-        addMessage(n8nResponse.feedbackUI, "assistant", true);
+        // 1. Показать текст рекомендации
+        if (n8nResponse.response) {
+          addMessage(n8nResponse.response, "assistant", true);
+        }
+        // 2. Показать форму фидбека
+        if (n8nResponse.feedbackUI) {
+          addMessage(n8nResponse.feedbackUI, "assistant", true);
+        }
       } else {
         addMessage(n8nResponse.response || "Нет ответа.", "assistant", true);
       }
