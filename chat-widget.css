@@ -154,20 +154,10 @@
 }
 #chat-close-button:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-#chat-clear-button {
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    margin-right: auto;
-    margin-left: 10px;
-}
-#chat-clear-button:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+#chat-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 #chat-clear-button {
@@ -178,8 +168,6 @@
     padding: 8px;
     border-radius: 50%;
     transition: all 0.2s ease;
-    margin-right: auto;
-    margin-left: 10px;
 }
 #chat-clear-button:hover {
     color: white;
@@ -286,15 +274,6 @@
 
 /* --- БЫСТРЫЕ ОТВЕТЫ ВНУТРИ ЧАТА --- */
 
-#chat-input-area #chat-input:disabled,
-#chat-input-area #chat-send-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-#chat-input-area #chat-send-button:disabled {
-    background-color: var(--chat-light-bg);
-}
 #chat-quick-replies {
     padding: 0 15px 10px;
     display: flex;
