@@ -1,4 +1,4 @@
-<!-- Контейнер для всего виджета -->
+<!-- Контейнер для всего виджета v.1.0 -->
 <div id="golubef-ai-chat-container">
     <!-- Начальное состояние (встроенное поле ввода, как на uipath.com) -->
     <div id="chat-initial-state">
@@ -24,6 +24,12 @@
         <!-- Заголовок чата -->
         <div id="chat-header">
             <span id="chat-title">Golubef AI</span>
+            <button id="chat-clear-button" aria-label="Очистить чат">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
             <button id="chat-close-button" aria-label="Закрыть чат">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
