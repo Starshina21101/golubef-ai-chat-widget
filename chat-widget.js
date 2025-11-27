@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let messageCounter = 0;
   const MESSAGELIMIT = 15;
 
-  // SESSION ID генерация и хранение v2.3
+  // SESSION ID генерация и хранение v2.4
   let sessionId = localStorage.getItem("chatSessionId");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
@@ -239,8 +239,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (initialChatInput) initialChatInput.value = "";
 
     const typingIndicator = addMessage("AI печатает...", "system");
+    
+    // Блокируем оба инпута и обе кнопки
     if (chatInput) chatInput.disabled = true;
     if (chatSendButton) chatSendButton.disabled = true;
+    if (initialChatInput) initialChatInput.disabled = true;
+    if (initialChatSendButton) initialChatSendButton.disabled = true;
+
 
     try {
       const n8nResponse = await sendMessageToN8n(messageText);
@@ -272,11 +277,23 @@ document.addEventListener("DOMContentLoaded", function () {
     } finally {
       if (chatInput) chatInput.disabled = false;
       if (chatSendButton) chatSendButton.disabled = false;
+      if (initialChatSendButton) initialChatSendButton.disabled = false;
+      if (initialChatInput) initialChatInput.disabled = false;
       if (chatInput) chatInput.focus();
     }
   }
 
   // --- Привязка событий
+  const chatClearButton = document.getElementById("chat-clear-button");
+  if (chatClearButton) {
+    chatClearButton.addEventListener("click", () => {
+      if (chatMessages) {
+        chatMessages.innerHTML = "";
+        addMessage("Чат очищен. Можете начать новый диалог.", "system", false);
+      }
+      localStorage.removeItem("chatHistory");
+    });
+  }
   if (chatCloseButton) chatCloseButton.addEventListener("click", closeChat);
   if (chatOverlay) chatOverlay.addEventListener("click", closeChat);
   if (initialChatSendButton) initialChatSendButton.addEventListener("click", () => handleSendMessage(initialChatInput.value));
