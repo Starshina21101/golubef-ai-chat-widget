@@ -33,7 +33,7 @@
     visibility: visible;
 }
 
-/* --- НАЧАЛЬНОЕ СОСТЯНИЕ (ВСТРОЕННОЕ ПОЛЕ) --- */
+/* --- НАЧАЛЬНОЕ СОСТОЯНИЕ (ВСТРОЕННОЕ ПОЛЕ) --- */
 #chat-initial-state {
     background-color: var(--chat-dark-bg);
     padding: 25px;
@@ -61,7 +61,9 @@
     padding: 10px 20px;
 }
 
-#initial-chat-input::placeholder { color: var(--chat-text-secondary); }
+#initial-chat-input::placeholder {
+    color: var(--chat-text-secondary);
+}
 
 #initial-chat-send-button {
     background-color: var(--chat-primary-color);
@@ -77,7 +79,9 @@
     transition: background-color 0.2s ease;
 }
 
-#initial-chat-send-button:hover { background-color: #0056e6; }
+#initial-chat-send-button:hover {
+    background-color: #0056e6;
+}
 
 #initial-quick-replies {
     margin-top: 15px;
@@ -101,9 +105,12 @@
     font-size: 0.85em;
     transition: background-color 0.2s ease;
 }
-.quick-reply-chip:hover { background-color: var(--chat-primary-color); }
 
-/* --- ОКНО ЧАТА (РАЗВЕРНУТОЕ) --- */
+.quick-reply-chip:hover {
+    background-color: var(--chat-primary-color);
+}
+
+/* --- ОКНО ЧАТА (РАЗВЁРНУТОЕ) --- */
 #chat-window {
     position: fixed;
     top: 50%;
@@ -132,6 +139,18 @@
     transform: translate(-50%, -50%) scale(1);
 }
 
+/* --- ПРОГРЕСС-БАР СВЕРХУ ОКНА --- */
+#chat-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--chat-primary-color), #00d4ff);
+    width: 0%;
+    transition: width 0.3s ease;
+    z-index: 10;
+}
+
 /* --- ЭЛЕМЕНТЫ ОКНА ЧАТА --- */
 #chat-header {
     background-color: var(--chat-dark-bg);
@@ -154,7 +173,10 @@
     transition: background-color 0.2s ease;
     margin-top: 4px;
 }
-#chat-close-button:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+#chat-close-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
 
 #chat-header-buttons {
     display: flex;
@@ -171,6 +193,7 @@
     border-radius: 50%;
     transition: all 0.2s ease;
 }
+
 #chat-clear-button:hover {
     color: white;
     background-color: rgba(255, 255, 255, 0.1);
@@ -191,6 +214,18 @@
     line-height: 1.5;
     font-size: 0.95em;
     text-align: left;
+    animation: message-appear 0.3s ease-out;
+}
+
+@keyframes message-appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .message.user {
@@ -215,19 +250,48 @@
     max-width: 100%;
 }
 
-/* --- АНИМАЦИЯ ПЕЧАТИ --- */
-.message.system.typing p:after {
-    content: '...';
-    display: inline-block;
-    animation: typing-dots 1.5s infinite;
-    position: relative;
-    left: 2px;
+/* --- TIMESTAMP ПОД СООБЩЕНИЕМ --- */
+.message-timestamp {
+    font-size: 0.75em;
+    color: var(--chat-text-secondary);
+    margin-top: 4px;
+    opacity: 0.7;
 }
 
-@keyframes typing-dots {
-    0%, 20% { content: '.'; }
-    40% { content: '..'; }
-    60%, 100% { content: '...'; }
+/* --- ИНДИКАТОР ПЕЧАТИ (3 ТОЧКИ) --- */
+.message.system.typing {
+    background-color: transparent;
+    text-align: left;
+}
+
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--chat-text-secondary);
+    border-radius: 50%;
+    animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    30% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
 }
 
 /* --- ПОЛЕ ВВОДА ВНУТРИ ЧАТА --- */
@@ -274,8 +338,19 @@
     background-color: var(--chat-light-bg);
 }
 
-/* --- БЫСТРЫЕ ОТВЕТЫ ВНУТРИ ЧАТА --- */
+/* --- СТАТУС "AI ОБРАБАТЫВАЕТ..." --- */
+#chat-status-message {
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 0.85em;
+    color: var(--chat-text-secondary);
+    font-style: italic;
+    background-color: rgba(0, 102, 255, 0.08);
+    border-top: 1px solid rgba(0, 102, 255, 0.25);
+    display: none;
+}
 
+/* --- БЫСТРЫЕ ОТВЕТЫ ВНУТРИ ЧАТА --- */
 #chat-quick-replies {
     padding: 0 15px 10px;
     display: flex;
@@ -318,6 +393,7 @@
     transition: all 0.2s ease;
     white-space: nowrap;
 }
+
 .quick-reply-button:hover {
     background-color: var(--chat-primary-color);
     border-color: var(--chat-primary-color);
