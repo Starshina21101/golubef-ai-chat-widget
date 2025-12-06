@@ -1,4 +1,4 @@
-/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V7 --- */
+/* --- ОБЩИЕ СТИЛИ И ПЕРЕМЕННЫЕ V8 --- */
 :root {
     --chat-primary-color: #0066FF;
     --chat-dark-bg: #1a1a1a;
@@ -8,7 +8,9 @@
     --chat-text-secondary: #999;
 }
 
-#golubef-ai-chat-container {
+#golubef-ai-chat-container,
+#chat-overlay,
+#chat-window {
     font-family: 'Inter', 'Montserrat', sans-serif;
 }
 
@@ -20,7 +22,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 2147483647; /* ← ИЗМЕНЕНО */
+    z-index: 2147483647;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -107,7 +109,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2147483647; /* ← ИЗМЕНЕНО */
+    z-index: 2147483647;
     width: 600px;
     height: 80vh;
     max-width: 95%;
@@ -147,10 +149,10 @@
     border: none;
     color: white;
     cursor: pointer;
-    padding: 8px; /* Увеличено для удобства тапа */
+    padding: 8px;
     border-radius: 50%;
     transition: background-color 0.2s ease;
-    margin-top: 4px; /* Добавлен небольшой отступ сверху */
+    margin-top: 4px;
 }
 #chat-close-button:hover { background-color: rgba(255, 255, 255, 0.1); }
 
@@ -188,7 +190,7 @@
     max-width: 85%;
     line-height: 1.5;
     font-size: 0.95em;
-    text-align: left; /* ВЫРАВНИВАНИЕ ПО ЛЕВОМУ КРАЮ */
+    text-align: left;
 }
 
 .message.user {
@@ -209,7 +211,7 @@
     background-color: transparent;
     color: var(--chat-text-secondary);
     font-style: italic;
-    text-align: center; /* Системные по центру */
+    text-align: center;
     max-width: 100%;
 }
 
@@ -277,7 +279,7 @@
 #chat-quick-replies {
     padding: 0 15px 10px;
     display: flex;
-    flex-wrap: nowrap; /* Горизонтальная прокрутка */
+    flex-wrap: nowrap;
     gap: 8px;
     background-color: var(--chat-dark-bg);
     overflow-x: auto;
@@ -285,7 +287,6 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.2) transparent;
     padding-right: 10px;
-    /* Убираем вертикальный скролл */
     overflow-y: hidden;
 }
 
@@ -325,13 +326,12 @@
 /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛОК --- */
 @media (max-width: 600px) {
     #chat-window {
-        /* --- Используем dvh вместо vh --- */
         top: 0;
         left: 0;
         width: 100%;
-        height: 100dvh; /* ← Ключевое изменение */
+        height: 100dvh;
         max-width: 100%;
-        max-height: 100dvh; /* ← Ключевое изменение */
+        max-height: 100dvh;
         border-radius: 0;
         box-shadow: none;
         transform: none;
@@ -344,7 +344,6 @@
         transform: none;
     }
 
-    /* --- Заголовок чата --- */
     #chat-header {
         position: sticky;
         top: 0;
@@ -358,7 +357,6 @@
         font-size: 1.1em;
     }
 
-    /* --- Сообщения --- */
     #chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -366,16 +364,12 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* --- Блок с быстрыми ответами --- */
     #chat-quick-replies {
         flex-shrink: 0;
         padding: 10px 15px 10px;
         background-color: var(--chat-dark-bg);
-        /* Убираем, если не нужен */
-        /* display: none; */
     }
 
-    /* --- Поле ввода --- */
     #chat-input-area {
         flex-shrink: 0;
         padding: 10px 15px;
@@ -384,7 +378,6 @@
         position: sticky;
         bottom: 0;
         z-index: 1002;
-        /* Убираем отступ safe-area, т.к. dvh уже учитывает это */
         padding-bottom: 0;
     }
 
