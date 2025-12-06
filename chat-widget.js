@@ -18,24 +18,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const MESSAGELIMIT = 15;
 
   // ===== TIMESTAMP =====
-  function formatTimestamp(date) {
-    const d = date instanceof Date ? date : new Date(date);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMin = Math.round(diffMs / 60000);
-
-    if (diffMin <= 1) return "Только что";
-    if (diffMin < 60) return diffMin + " мин назад";
-
-    const diffHours = Math.round(diffMin / 60);
-    if (diffHours < 24) return diffHours + " ч назад";
-
-    return (
-      d.toLocaleDateString("ru-RU") +
-      " " +
-      d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
-    );
-  }
+function formatTimestamp(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
   // ===== SESSION ID v2.5 =====
   let sessionId = localStorage.getItem("chatSessionId");
